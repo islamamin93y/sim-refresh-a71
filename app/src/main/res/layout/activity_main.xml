@@ -43,13 +43,13 @@
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:layout_marginTop="10dp"
-            android:text="Refresh eSIM on SIM 1" />
+            android:text="Run RadioInfo SIM refresh" />
 
         <TextView
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:layout_marginTop="8dp"
-            android:text="The assisted method opens Samsung SIM Manager, switches mobile data temporarily to SIM 2 (WE), waits, then returns it to SIM 1 (eSIM.me). Keep the phone unlocked and do not touch the screen."
+            android:text="The assisted method opens Samsung Phone Information using the correct com.android.phone activity, switches Mobile Radio Power off, waits 5 seconds, then switches it on. Keep the phone unlocked and do not touch the screen."
             android:textSize="13sp" />
 
         <Button
