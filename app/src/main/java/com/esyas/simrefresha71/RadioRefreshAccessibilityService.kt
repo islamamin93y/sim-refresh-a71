@@ -5,7 +5,6 @@ import android.content.ComponentName
 import android.content.Intent
 import android.os.Handler
 import android.os.Looper
-import android.provider.Settings
 import android.view.accessibility.AccessibilityEvent
 import android.view.accessibility.AccessibilityNodeInfo
 import android.widget.Toast
@@ -41,95 +40,63 @@ class RadioRefreshAccessibilityService : AccessibilityService() {
         }
         refreshRunning = true
 
-        if (!openSimManager()) {
+        val intent = Intent(Intent.ACTION_MAIN).apply {
+            component = ComponentName(
+                "com.android.phone",
+                "com.android.phone.settings.RadioInfo"
+            )
+            addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+        }
+
+        try {
+            startActivity(intent)
+        } catch (_: Throwable) {
             refreshRunning = false
-            Toast.makeText(this, "SIM Manager could not be opened", Toast.LENGTH_LONG).show()
+            Toast.makeText(this, "Phone Information could not be opened", Toast.LENGTH_LONG).show()
             return
         }
 
-        Toast.makeText(this, "Opening SIM Manager… do not touch the screen", Toast.LENGTH_LONG).show()
-        handler.postDelayed({ chooseMobileDataSim2() }, 2500L)
+        Toast.makeText(this, "Opening Phone Information… do not touch the screen", Toast.LENGTH_LONG).show()
+        handler.postDelayed({ turnRadioOff() }, 2200L)
     }
 
-    private fun openSimManager(): Boolean {
-        val candidates = listOf(
-            Intent().apply {
-                component = ComponentName(
-                    "com.samsung.android.app.telephonyui",
-                    "com.samsung.android.app.telephonyui.netsettings.ui.simcardmanager.SimCardMgrActivity"
-                )
-                addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
-            },
-            Intent(Settings.ACTION_WIRELESS_SETTINGS).apply {
-                addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
-            }
+    private fun turnRadioOff() {
+        val toggle = findClickableForAnyText(
+            listOf("Mobile Radio Power", "Mobile radio power")
         )
-
-        for (intent in candidates) {
-            try {
-                startActivity(intent)
-                return true
-            } catch (_: Throwable) {
-                // Try the next available Samsung/settings screen.
-            }
-        }
-        return false
-    }
-
-    private fun chooseMobileDataSim2() {
-        if (!clickFirstText(listOf("Mobile data", "Mobile data SIM", "Preferred SIM for mobile data"))) {
-            finishWithMessage("Mobile data option was not found in SIM Manager")
+        val clicked = toggle?.performAction(AccessibilityNodeInfo.ACTION_CLICK) == true
+        if (!clicked) {
+            finishWithMessage("Mobile Radio Power switch was not found")
             return
         }
 
-        handler.postDelayed({
-            val selected = clickFirstText(listOf("WE", "We", "SIM 2", "SIM2"))
-            if (!selected) {
-                finishWithMessage("SIM 2 / WE option was not found")
-                return@postDelayed
-            }
-            clickConfirmationIfPresent()
-            Toast.makeText(this, "Temporarily switched data to SIM 2", Toast.LENGTH_SHORT).show()
-            handler.postDelayed({ chooseMobileDataSim1() }, 5000L)
-        }, 1200L)
+        Toast.makeText(this, "Radio OFF — waiting 5 seconds", Toast.LENGTH_SHORT).show()
+        handler.postDelayed({ turnRadioOn() }, 5000L)
     }
 
-    private fun chooseMobileDataSim1() {
-        if (!clickFirstText(listOf("Mobile data", "Mobile data SIM", "Preferred SIM for mobile data"))) {
-            finishWithMessage("Could not reopen Mobile data selection")
-            return
-        }
+    private fun turnRadioOn() {
+        val toggle = findClickableForAnyText(
+            listOf("Mobile Radio Power", "Mobile radio power")
+        )
+        val clicked = toggle?.performAction(AccessibilityNodeInfo.ACTION_CLICK) == true
+        refreshRunning = false
 
-        handler.postDelayed({
-            val selected = clickFirstText(listOf("esim.me", "eSIM.me", "ESIM.ME", "SIM 1", "SIM1"))
-            if (!selected) {
-                finishWithMessage("SIM 1 / eSIM.me option was not found")
-                return@postDelayed
-            }
-            clickConfirmationIfPresent()
-            handler.postDelayed({
-                refreshRunning = false
-                Toast.makeText(
-                    this,
-                    "Data returned to SIM 1. Wait up to 60 seconds and test the new eSIM profile.",
-                    Toast.LENGTH_LONG
-                ).show()
-            }, 1500L)
-        }, 1200L)
+        Toast.makeText(
+            this,
+            if (clicked) {
+                "Radio ON — wait up to 60 seconds and test the new eSIM profile"
+            } else {
+                "Could not turn Mobile Radio Power back on"
+            },
+            Toast.LENGTH_LONG
+        ).show()
     }
 
-    private fun clickConfirmationIfPresent() {
-        handler.postDelayed({
-            clickFirstText(listOf("OK", "Done", "Confirm", "Switch"))
-        }, 500L)
-    }
-
-    private fun clickFirstText(candidates: List<String>): Boolean {
+    private fun findClickableForAnyText(candidates: List<String>): AccessibilityNodeInfo? {
         for (text in candidates) {
-            val node = findClickableForText(text)
-            if (node?.performAction(AccessibilityNodeInfo.ACTION_CLICK) == true) return true
+            findClickableForText(text)?.let { return it }
         }
-        return false
+        return null
     }
 
     private fun findClickableForText(text: String): AccessibilityNodeInfo? {
@@ -151,7 +118,7 @@ class RadioRefreshAccessibilityService : AccessibilityService() {
 
     private fun findClickableNode(start: AccessibilityNodeInfo?): AccessibilityNodeInfo? {
         var current: AccessibilityNodeInfo? = start
-        repeat(6) {
+        repeat(8) {
             val node = current ?: return null
             if (node.isClickable && node.isEnabled) return node
             current = node.parent
