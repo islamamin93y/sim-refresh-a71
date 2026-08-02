@@ -25,6 +25,27 @@
             android:textSize="15sp" />
 
         <Button
+            android:id="@+id/btnEnableAutomation"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="20dp"
+            android:text="Enable assisted refresh" />
+
+        <Button
+            android:id="@+id/btnRunAutomation"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="10dp"
+            android:text="Run assisted radio refresh" />
+
+        <TextView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="8dp"
+            android:text="The assisted method opens Phone Information and attempts to switch Mobile Radio Power off, waits, then switches it on. Keep the phone unlocked during the process."
+            android:textSize="13sp" />
+
+        <Button
             android:id="@+id/btnRequestPermission"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
