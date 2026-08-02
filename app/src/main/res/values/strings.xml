@@ -1,0 +1,5 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">SIM Refresh A71</string>
+    <string name="accessibility_service_description">Assists with opening Phone Information and switching Mobile Radio Power off and on. It does not read typed text or delete eSIM profiles.</string>
+</resources>
