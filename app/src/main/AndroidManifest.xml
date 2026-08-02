@@ -4,6 +4,7 @@
     <uses-permission android:name="android.permission.READ_PHONE_STATE" />
     <uses-permission android:name="android.permission.READ_BASIC_PHONE_STATE" />
     <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
+    <uses-permission android:name="android.permission.QUERY_ALL_PACKAGES" />
 
     <!-- Signature/privileged permission: Android will not grant this to a normal sideloaded app. -->
     <uses-permission android:name="android.permission.MODIFY_PHONE_STATE" />
@@ -13,6 +14,10 @@
         android:label="@string/app_name"
         android:supportsRtl="true"
         android:theme="@style/Theme.SimRefreshA71">
+
+        <activity
+            android:name=".TelephonyExplorerActivity"
+            android:exported="false" />
 
         <activity
             android:name=".MainActivity"
