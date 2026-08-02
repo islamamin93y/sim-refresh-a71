@@ -36,6 +36,13 @@ class MainActivity : AppCompatActivity() {
         logView = findViewById(R.id.txtLog)
         smartRefreshButton = findViewById(R.id.btnSmartRefresh)
 
+        findViewById<Button>(R.id.btnEnableAutomation).setOnClickListener {
+            startActivity(Intent(Settings.ACTION_ACCESSIBILITY_SETTINGS))
+            appendLog("Enable SIM Refresh automation in Accessibility, then return to the app.")
+        }
+        findViewById<Button>(R.id.btnRunAutomation).setOnClickListener {
+            runAssistedRefresh()
+        }
         findViewById<Button>(R.id.btnRequestPermission).setOnClickListener {
             requestPhonePermission()
         }
@@ -56,6 +63,15 @@ class MainActivity : AppCompatActivity() {
         }
     }
 
+    private fun runAssistedRefresh() {
+        if (RadioRefreshAccessibilityService.requestRefresh()) {
+            appendLog("Assisted refresh started. Keep the phone unlocked and do not touch the screen for about 10 seconds.")
+        } else {
+            appendLog("Accessibility automation is not enabled. Tap Enable assisted refresh first.")
+            startActivity(Intent(Settings.ACTION_ACCESSIBILITY_SETTINGS))
+        }
+    }
+
     private fun requestPhonePermission() {
         if (ContextCompat.checkSelfPermission(this, Manifest.permission.READ_PHONE_STATE) == PackageManager.PERMISSION_GRANTED) {
             appendLog("READ_PHONE_STATE is already granted.")
@@ -64,11 +80,6 @@ class MainActivity : AppCompatActivity() {
         }
     }
 
-    /**
-     * Tries several non-destructive modem/SIM refresh paths. Android may block every
-     * privileged operation; each result is logged so we can identify what this
-     * Samsung firmware permits.
-     */
     private fun smartSimRefresh() {
         smartRefreshButton.isEnabled = false
         logView.text = "SMART SIM REFRESH started.\nNo eSIM profile will be deleted."
@@ -122,7 +133,7 @@ class MainActivity : AppCompatActivity() {
                 appendLog("At least one radio-control call was accepted. Wait 30-60 seconds and test calls/data on the newly selected eSIM profile.")
             } else {
                 appendLog("All direct radio-control calls were blocked or unavailable on this firmware.")
-                appendLog("Use Open Phone Information to try Mobile Radio Power manually; the app did not change any permanent network setting.")
+                appendLog("Try Run assisted radio refresh. It uses the visible Phone Information switch and does not need MODIFY_PHONE_STATE.")
             }
             smartRefreshButton.isEnabled = true
         }, 1800L)
