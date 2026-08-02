@@ -25,10 +25,17 @@
             android:textSize="15sp" />
 
         <Button
-            android:id="@+id/btnEnableAutomation"
+            android:id="@+id/btnTelephonyExplorer"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:layout_marginTop="20dp"
+            android:text="Samsung Telephony Explorer" />
+
+        <Button
+            android:id="@+id/btnEnableAutomation"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="10dp"
             android:text="Enable assisted refresh" />
 
         <Button
