@@ -15,12 +15,14 @@ class RadioRefreshAccessibilityService : AccessibilityService() {
     private var refreshRunning = false
 
     override fun onServiceConnected() {
+        super.onServiceConnected()
         instance = this
         Toast.makeText(this, "SIM Refresh automation enabled", Toast.LENGTH_SHORT).show()
     }
 
     override fun onDestroy() {
         if (instance === this) instance = null
+        handler.removeCallbacksAndMessages(null)
         super.onDestroy()
     }
 
@@ -28,6 +30,7 @@ class RadioRefreshAccessibilityService : AccessibilityService() {
 
     override fun onInterrupt() {
         refreshRunning = false
+        handler.removeCallbacksAndMessages(null)
     }
 
     fun runAssistedRadioRefresh() {
@@ -37,25 +40,26 @@ class RadioRefreshAccessibilityService : AccessibilityService() {
         }
         refreshRunning = true
 
-        val intent = Intent("android.intent.action.MAIN").apply {
+        val intent = Intent(Intent.ACTION_MAIN).apply {
             component = ComponentName("com.android.settings", "com.android.settings.RadioInfo")
             addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
         }
 
         try {
             startActivity(intent)
-        } catch (error: Throwable) {
+        } catch (_: Throwable) {
             refreshRunning = false
             Toast.makeText(this, "Phone Information could not be opened", Toast.LENGTH_LONG).show()
             return
         }
 
-        handler.postDelayed({ toggleRadioOffThenOn() }, 1800L)
+        handler.postDelayed({ toggleRadioOffThenOn() }, 2000L)
     }
 
     private fun toggleRadioOffThenOn() {
         val firstToggle = findClickableForText("Mobile Radio Power")
-        if (firstToggle == null || !firstToggle.performAction(AccessibilityNodeInfo.ACTION_CLICK)) {
+        val offClicked = firstToggle?.performAction(AccessibilityNodeInfo.ACTION_CLICK) == true
+        if (!offClicked) {
             refreshRunning = false
             Toast.makeText(
                 this,
@@ -69,11 +73,11 @@ class RadioRefreshAccessibilityService : AccessibilityService() {
 
         handler.postDelayed({
             val secondToggle = findClickableForText("Mobile Radio Power")
-            val clicked = secondToggle?.performAction(AccessibilityNodeInfo.ACTION_CLICK) == true
+            val onClicked = secondToggle?.performAction(AccessibilityNodeInfo.ACTION_CLICK) == true
             refreshRunning = false
             Toast.makeText(
                 this,
-                if (clicked) "Radio ON — wait up to 60 seconds" else "Could not turn the radio back on",
+                if (onClicked) "Radio ON — wait up to 60 seconds" else "Could not turn the radio back on",
                 Toast.LENGTH_LONG
             ).show()
         }, 3500L)
@@ -85,27 +89,28 @@ class RadioRefreshAccessibilityService : AccessibilityService() {
         for (match in matches) {
             findClickableNode(match)?.let { return it }
             findClickableDescendant(match)?.let { return it }
-            match.parent?.let { parent ->
-                findClickableDescendant(parent)?.let { return it }
-            }
+            val parent = match.parent
+            findClickableDescendant(parent)?.let { return it }
         }
         return null
     }
 
     private fun findClickableNode(start: AccessibilityNodeInfo?): AccessibilityNodeInfo? {
-        var current = start
+        var current: AccessibilityNodeInfo? = start
         repeat(5) {
-            if (current?.isClickable == true && current.isEnabled) return current
-            current = current?.parent
+            val node = current ?: return null
+            if (node.isClickable && node.isEnabled) return node
+            current = node.parent
         }
         return null
     }
 
     private fun findClickableDescendant(node: AccessibilityNodeInfo?): AccessibilityNodeInfo? {
-        if (node == null) return null
+        node ?: return null
         if (node.isClickable && node.isEnabled) return node
         for (index in 0 until node.childCount) {
-            findClickableDescendant(node.getChild(index))?.let { return it }
+            val child = node.getChild(index)
+            findClickableDescendant(child)?.let { return it }
         }
         return null
     }
@@ -113,8 +118,6 @@ class RadioRefreshAccessibilityService : AccessibilityService() {
     companion object {
         @Volatile
         private var instance: RadioRefreshAccessibilityService? = null
-
-        fun isRunning(): Boolean = instance != null
 
         fun requestRefresh(): Boolean {
             val service = instance ?: return false
