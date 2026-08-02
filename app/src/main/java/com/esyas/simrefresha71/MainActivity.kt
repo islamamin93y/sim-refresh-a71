@@ -36,6 +36,9 @@ class MainActivity : AppCompatActivity() {
         logView = findViewById(R.id.txtLog)
         smartRefreshButton = findViewById(R.id.btnSmartRefresh)
 
+        findViewById<Button>(R.id.btnTelephonyExplorer).setOnClickListener {
+            startActivity(Intent(this, TelephonyExplorerActivity::class.java))
+        }
         findViewById<Button>(R.id.btnEnableAutomation).setOnClickListener {
             startActivity(Intent(Settings.ACTION_ACCESSIBILITY_SETTINGS))
             appendLog("Enable SIM Refresh automation in Accessibility, then return to the app.")
