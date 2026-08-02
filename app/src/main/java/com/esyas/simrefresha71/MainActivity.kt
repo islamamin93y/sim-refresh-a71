@@ -1,7 +1,6 @@
 package com.esyas.simrefresha71
 
 import android.Manifest
-import android.app.Activity
 import android.content.ComponentName
 import android.content.Intent
 import android.content.pm.PackageManager
@@ -62,17 +61,15 @@ class MainActivity : AppCompatActivity() {
         try {
             val telephonyManager = getSystemService(TelephonyManager::class.java)
             if (Build.VERSION.SDK_INT >= 33) {
-                val success = telephonyManager.rebootModem()
-                appendLog("rebootModem() returned: $success")
-                if (!success) {
-                    appendLog("Android accepted the call but the modem did not restart.")
-                }
+                telephonyManager.rebootModem()
+                appendLog("rebootModem() request was sent to Android.")
+                appendLog("Wait up to 60 seconds and check whether the active SIM profile is recognized.")
             } else {
                 appendLog("This Android version does not expose the public rebootModem() API.")
             }
         } catch (security: SecurityException) {
             appendLog("Blocked by Android: ${security.message}")
-            appendLog("The app does not have the privileged MODIFY_PHONE_STATE permission.")
+            appendLog("The app does not have the privileged MODIFY_PHONE_STATE permission or carrier privileges.")
         } catch (unsupported: UnsupportedOperationException) {
             appendLog("Not supported by this Samsung modem: ${unsupported.message}")
         } catch (error: Throwable) {
